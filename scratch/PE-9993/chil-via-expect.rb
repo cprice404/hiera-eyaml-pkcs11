@@ -1,21 +1,23 @@
 #!/usr/bin/env ruby
 
 require 'base64'
-require 'popen3-process-wrapper'
+# require 'popen3-process-wrapper'
+require 'jruby-process-wrapper'
 
 class ExpectReproducer
-  def self.chil(command, response_regex, action)
-    p = ProcessWrapper.execute(command)
+  def self.chil(command, args, response_regex, action)
+    p = ProcessWrapper.execute(command, args)
     output = p.output_string
 
     puts "EXIT CODE: #{p.exit_code}"
     # TODO: error handling
 
+    puts "OUTPUT: '#{output}'"
     if match = output.match(response_regex)
       header,cryptogram = match.captures
       cryptogram = Base64.decode64(cryptogram) if action == :encrypt
     else
-      raise "Unable to parse output:\n #{output} \n with regex #{response_regex.to_s}"
+      raise "Unable to parse output: '#{output}' \n with regex #{response_regex.to_s}"
     end
     return cryptogram
   end
@@ -27,16 +29,20 @@ class ExpectReproducer
       itr = itr + 1
       puts "iteration - #{itr}"
 
-      val = Base64.encode64("WORLD")
+      val = Base64.encode64("WORLD").strip
       prompt_regex = "(Password:)|(test@localhost's password:)"
       hsm_password = "test"
-      command = "./expect-ssh.sh \"echo 'HELLO #{val}'\" \"#{prompt_regex}\" \"#{hsm_password}\""
+      command = "./expect-ssh.sh"
+      args = ["echo 'HELLO #{val}'",
+              "#{prompt_regex}",
+              "#{hsm_password}"]
+      # command = "echo 'HELLO #{val}"
       action = :encrypt
 
       regex = /(HELLO) (.*)$/
 
       puts "CHIL RETURNED:"
-      puts chil(command, regex, action)
+      puts chil(command, args, regex, action)
       puts
     end
   end

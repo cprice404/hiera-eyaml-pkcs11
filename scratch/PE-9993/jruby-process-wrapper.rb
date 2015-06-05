@@ -8,58 +8,64 @@ java_import java.io.BufferedReader
 java_import java.io.InputStreamReader
 java_import java.io.InputStream
 
-class JRubyProcessWrapper
-  def initialize(command)
-    @process = Runtime.runtime.exec(command, ["TERM=VT100"].to_java(:string))
+class ProcessWrapper
+  def initialize(exit_code, output_string, error_string)
+    @exit_code = exit_code
+    @output_string = output_string
+    @error_string = error_string
+  end
+  attr_accessor :exit_code, :output_string, :error_string
 
-    # out_string = StringWriter.new
-    # out_writer = PrintWriter.new(out_string, true)
-    # out_stream = PipedInputStream.new
-    @stdout_boozer = StreamBoozer.new(@process.input_stream)
-    # stdout_stream = stdout_boozer.stdout_stream
+  def self.execute(command, args)
+    process = Runtime.runtime.exec([command].concat(args).to_java(:string))
 
-    # err_string = StringWriter.new
-    # stderr_boozer = StreamBoozer.new(proc.error_stream, PrintWriter.new(err_string, true))
+    out_string = StringWriter.new
+    stdout_pump = StreamPump.new(process.input_stream, PrintWriter.new(out_string, true))
 
-    @stdout_boozer.start
-    # stderr_boozer.start
+    err_string = StringWriter.new
+    stderr_pump = StreamPump.new(process.error_stream, PrintWriter.new(err_string, true))
+
+    stdout_pump.start
+    stderr_pump.start
+    exit_code = process.wait_for
+    stdout_pump.join
+    stderr_pump.join
+
+    ProcessWrapper.new(exit_code, out_string.to_string, err_string.to_string)
   end
 
-  def stdout_stream
-    StringWriterInputStream.new(@stdout_boozer.string_writer)
-  end
+  # def stdout_stream
+  #   StringWriterInputStream.new(@stdout_boozer.string_writer)
+  # end
+  #
+  # def stdin_stream
+  #   # proc.output_stream
+  #   @process.output_stream.to_io
+  # end
+  #
+  #
+  #
+  # class StringWriterInputStream < InputStream
+  #   def initialize(string_writer)
+  #     super()
+  #   end
+  # end
 
-  def stdin_stream
-    # proc.output_stream
-    @process.output_stream.to_io
-  end
 
-
-
-  class StringWriterInputStream < InputStream
-    def initialize(string_writer)
-      super()
-    end
-  end
-
-
-  class StreamBoozer < java.lang.Thread
-    def initialize(input_stream)
+  class StreamPump < java.lang.Thread
+    def initialize(input_stream, writer)
       @input_stream = input_stream
-
-      @string_writer = StringWriter.new
-      @print_writer = PrintWriter.new(@string_writer, true)
+      @writer = writer
 
       super()
     end
     attr_reader :string_writer
 
     def run
-      puts "Running boozer thread!"
       begin
         reader = BufferedReader.new(InputStreamReader.new(@input_stream))
         while line = reader.read_line
-          @print_writer.println(line)
+          @writer.println(line)
         end
       ensure
         if reader

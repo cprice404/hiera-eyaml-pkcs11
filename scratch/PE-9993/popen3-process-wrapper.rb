@@ -10,12 +10,14 @@ class ProcessWrapper
   end
   attr_accessor :exit_code, :output_string, :error_string
 
-  def self.execute(command)
+  def self.execute(command, args)
     exit_code = nil
     output_string = nil
     error_string = nil
 
-    Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
+    final_command = "#{command} #{args.map {|x| "\"#{x}\""} .join(" ")}"
+
+    Open3.popen3(final_command) do |stdin, stdout, stderr, wait_thr|
         # wait for process to exit
         exit_code = wait_thr.value
         output_string = stdout.read
