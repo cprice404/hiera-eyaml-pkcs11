@@ -18,7 +18,9 @@ class ExpectReproducer
       header,cryptogram = match.captures
       cryptogram = Base64.decode64(cryptogram) if action == :encrypt
     else
-      raise "Unable to parse output: '#{output}' \n with regex #{response_regex.to_s}"
+      puts "Unable to parse output: '#{output}' \n with regex #{response_regex.to_s}"
+      puts "STDERR output: #{p.error_string}"
+      raise "AAAAAA"
     end
     return cryptogram
   end
