@@ -1,4 +1,7 @@
-require 'pty'
+#!/usr/bin/env ruby
+
+# require 'pty'
+require 'jruby-pty'
 require 'base64'
 
 class PTYReproducer
@@ -24,7 +27,7 @@ class PTYReproducer
         header,cryptogram = match.captures
         cryptogram = Base64.decode64(cryptogram) if action == :encrypt
       else
-        raise "Unable to parse output:\n #{output} \n with regex #{regex.to_s}"
+        raise "Unable to parse output:\n #{output} \n with regex #{response_regex.to_s}"
       end
       return cryptogram
     end
