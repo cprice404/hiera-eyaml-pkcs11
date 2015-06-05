@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'base64'
+
+#### CHOOSE ONE OF THESE TWO IMPLEMENTATIONS OF ProcessWrapper
 # require 'popen3-process-wrapper'
 require 'jruby-process-wrapper'
 
