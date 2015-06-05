@@ -7,10 +7,6 @@ set password [lindex $argv 2]
 
 log_user 0
 spawn ssh test@localhost $cmd
-#spawn $cmd
-#log_user 0
-#spawn echo "HELLO V09STEQ=\n"
-#log_user 1
 expect_after oef { exit 0 }
 
 expect -re $prompt_regex { send "$password\r" }

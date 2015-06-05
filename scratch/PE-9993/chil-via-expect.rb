@@ -12,7 +12,6 @@ class ExpectReproducer
     puts "EXIT CODE: #{p.exit_code}"
     # TODO: error handling
 
-    puts "OUTPUT: '#{output}'"
     if match = output.match(response_regex)
       header,cryptogram = match.captures
       cryptogram = Base64.decode64(cryptogram) if action == :encrypt
@@ -41,9 +40,8 @@ class ExpectReproducer
 
       regex = /(HELLO) (.*)$/
 
-      puts "CHIL RETURNED:"
-      puts chil(command, args, regex, action)
-      puts
+      rv = chil(command, args, regex, action)
+      puts "CHIL RETURNED: '#{rv}'"
     end
   end
 end
